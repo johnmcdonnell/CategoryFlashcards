@@ -5,8 +5,7 @@ window.onload = function () {
     var cardh = 231;
     var cardw = 165;
     var nowX, nowY, w = 1000, h=800, r=30, R = Raphael(document.getElementById("holder"), w, h)
-    var cards = new Array();
-    cardnames =  [
+    var cardnames =  [
         "http://www.laeh500.com/LAEH/Mafia_Blue_files/small.18-filtered.jpg",
         "http://www.laeh500.com/LAEH/Mafia_Blue_files/small.21-filtered.jpg",
         "http://www.laeh500.com/LAEH/Mafia_Blue_files/small.24-filtered.jpg",
@@ -44,6 +43,7 @@ window.onload = function () {
         this.attr({opacity: 1});
     };
     
+    var cards = new Array();
     for ( i=0; i < cardnames.length; i ++ ){
         cards[i] = R.image( cardnames[i], cardw * (i % 5), cardh*Math.floor(i/5), cardw, cardh ).attr({
             opacity: 1,
