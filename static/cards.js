@@ -4,30 +4,31 @@ window.onload = function () {
     var translucence = .9;
     var cardh = 231;
     var cardw = 165;
-    var nowX, nowY, w = 1000, h=800, r=30, R = Raphael(document.getElementById("holder"), w, h),
-        c1 = R.image( "http://www.laeh500.com/LAEH/Mafia_Blue_files/small.18-filtered.jpg", cardw, 20, cardw, cardh ).attr({
-        //c = R.circle( 100, 100, 50 ).attr({
-        //fill: "hsb(.8,1,1)",
-        opacity: 1,
-        cursor: "move"
-    }),
-        c2 = R.image( "http://www.laeh500.com/LAEH/Mafia_Blue_files/small.23-filtered.jpg", cardw*2, 20, cardw, cardh ).attr({
-        //c = R.circle( 100, 100, 50 ).attr({
-        //fill: "hsb(.8,1,1)",
-        opacity: 1,
-        cursor: "move"
-    }),
-        c3 = R.image( "http://www.laeh500.com/LAEH/Mafia_Blue_files/small.21-filtered.jpg", cardw*3, 20, cardw, cardh ).attr({
-        //c = R.circle( 100, 100, 50 ).attr({
-        //fill: "hsb(.8,1,1)",
-        opacity: 1,
-        cursor: "move"
-    });
+    var nowX, nowY, w = 1000, h=800, r=30, R = Raphael(document.getElementById("holder"), w, h)
+    var cards = new Array();
+    cardnames =  [
+        "http://www.laeh500.com/LAEH/Mafia_Blue_files/small.18-filtered.jpg",
+        "http://www.laeh500.com/LAEH/Mafia_Blue_files/small.21-filtered.jpg",
+        "http://www.laeh500.com/LAEH/Mafia_Blue_files/small.24-filtered.jpg",
+        "http://www.laeh500.com/LAEH/Mafia_Blue_files/small.25-filtered.jpg",
+        "http://www.laeh500.com/LAEH/Mafia_Blue_files/small.08-filtered.jpg",
+        "http://www.laeh500.com/LAEH/Mafia_Blue_files/small.10-filtered.jpg",
+        "http://www.laeh500.com/LAEH/Mafia_Blue_files/small.12-filtered.jpg",
+        "http://www.laeh500.com/LAEH/Mafia_Blue_files/small.13-filtered.jpg",
+        "http://www.laeh500.com/LAEH/Mafia_Blue_files/small.14-filtered.jpg",
+        "http://www.laeh500.com/LAEH/Mafia_Blue_files/small.15-filtered.jpg",
+        "http://www.laeh500.com/LAEH/Mafia_Blue_files/small.05-filtered.jpg",
+        "http://www.laeh500.com/LAEH/Mafia_Blue_files/small.02-filtered.jpg",
+        "http://www.laeh500.com/LAEH/Mafia_Blue_files/small.01-filtered.jpg",
+        "http://www.laeh500.com/LAEH/Mafia_Blue_files/small.27-filtered.jpg",
+        "http://www.laeh500.com/LAEH/Mafia_Blue_files/small.23-filtered.jpg",
+        ];
     
     var start = function () {
         this.ox = this.attr( "cx" );
         this.oy = this.attr( "cy" );
         this.attr({opacity: translucence});
+        this.toFront();
     },
     movePath = function (dx, dy) {
        // move is called with dx and dy, which we convert
@@ -42,7 +43,13 @@ window.onload = function () {
     up = function() {
         this.attr({opacity: 1});
     };
-    c1.drag( movePath, start, up );
-    c2.drag( movePath, start, up );
-    c3.drag( movePath, start, up );
+    
+    for ( i=0; i < cardnames.length; i ++ ){
+        cards[i] = R.image( cardnames[i], cardw * (i % 5), cardh*Math.floor(i/5), cardw, cardh ).attr({
+            opacity: 1,
+            cursor: "move"
+        });
+        cards[i].drag( movePath, start, up );
+    }
+    
 };
