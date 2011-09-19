@@ -1,32 +1,41 @@
 
+shuffle = function(o){ //v1.0
+	for(var j, x, i = o.length; i; j = parseInt(Math.random() * i), x = o[--i], o[i] = o[j], o[j] = x);
+	return o;
+};
+
+
+catfun = function ( num ) {
+    return num % 2;
+}
 
 window.onload = function () {
     var translucence = .9;
-    var cardh = 231;
-    var cardw = 165;
+    var cardh = 100;
+    var cardw = 100;
+    var upper = 100;
+    var left = 300;
     var nowX, nowY, w = 1000, h=800, r=30, R = Raphael(document.getElementById("holder"), w, h)
     var cardnames =  [
-        "http://www.laeh500.com/LAEH/Mafia_Blue_files/small.18-filtered.jpg",
-        "http://www.laeh500.com/LAEH/Mafia_Blue_files/small.21-filtered.jpg",
-        "http://www.laeh500.com/LAEH/Mafia_Blue_files/small.24-filtered.jpg",
-        "http://www.laeh500.com/LAEH/Mafia_Blue_files/small.25-filtered.jpg",
-        "http://www.laeh500.com/LAEH/Mafia_Blue_files/small.08-filtered.jpg",
-        "http://www.laeh500.com/LAEH/Mafia_Blue_files/small.10-filtered.jpg",
-        "http://www.laeh500.com/LAEH/Mafia_Blue_files/small.12-filtered.jpg",
-        "http://www.laeh500.com/LAEH/Mafia_Blue_files/small.13-filtered.jpg",
-        "http://www.laeh500.com/LAEH/Mafia_Blue_files/small.14-filtered.jpg",
-        "http://www.laeh500.com/LAEH/Mafia_Blue_files/small.15-filtered.jpg",
-        "http://www.laeh500.com/LAEH/Mafia_Blue_files/small.05-filtered.jpg",
-        "http://www.laeh500.com/LAEH/Mafia_Blue_files/small.02-filtered.jpg",
-        "http://www.laeh500.com/LAEH/Mafia_Blue_files/small.01-filtered.jpg",
-        "http://www.laeh500.com/LAEH/Mafia_Blue_files/small.27-filtered.jpg",
-        "http://www.laeh500.com/LAEH/Mafia_Blue_files/small.23-filtered.jpg",
+        "images/STIM00.GIF",
+        "images/STIM01.GIF",
+        "images/STIM02.GIF",
+        "images/STIM03.GIF",
+        "images/STIM04.GIF",
+        "images/STIM05.GIF",
+        "images/STIM06.GIF",
+        "images/STIM07.GIF",
         ];
+    var catnames = [
+        "http://www.craftjr.com/wp-content/uploads/2009/04/a.gif",
+        "http://www.craftjr.com/wp-content/uploads/2009/04/b.gif"
+        ]
     
     var start = function () {
         this.ox = this.attr( "cx" );
         this.oy = this.attr( "cy" );
-        this.attr({opacity: translucence});
+        this.attr({opacity: translucence,
+        });
         this.toFront();
     },
     movePath = function (dx, dy) {
@@ -40,16 +49,35 @@ window.onload = function () {
        this.oy = dy;
     },
     up = function() {
-        this.attr({opacity: 1});
+        this.attr({opacity: 1 });
     };
     
     var cards = new Array();
+    var randomis = new Array();
+    for ( i=0; i < cardnames.length; i ++ ){ randomis.push( i ) };
+    randomis = shuffle( randomis );
+    
     for ( i=0; i < cardnames.length; i ++ ){
-        cards[i] = R.image( cardnames[i], cardw * (i % 5), cardh*Math.floor(i/5), cardw, cardh ).attr({
+        var loci = randomis[i]
+        cards[i] = R.image( cardnames[i], cardw * (loci % 4) + left, cardh*Math.floor(loci/4) + upper, cardw, cardh ).attr({
             opacity: 1,
             cursor: "move"
         });
+        cards[i].catname = catnames[ catfun( i ) ];
+        cards[i].original = cardnames[i];
         cards[i].drag( movePath, start, up );
-    }
+        cards[i].dblclick( function( event ) {
+            this.attr({
+                src: this.catname
+            });
+            var image = this;
+            setTimeout( 
+                function(){ 
+                    image.attr({src: image.original });
+                    image=null; }, 
+                2000
+            );
+        });
+    };
     
 };
