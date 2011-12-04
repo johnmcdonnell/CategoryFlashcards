@@ -1,4 +1,9 @@
 
+
+/********************
+// CODE FOR TRAINING
+********************/
+
 // Globals defined initially.
 cardnames = [
 	"images/STIM00.GIF",
@@ -10,21 +15,30 @@ cardnames = [
 	"images/STIM06.GIF",
 	"images/STIM07.GIF",
 ];
-var sampleunits = 8;
+var sampleunits = 16;
+var cardh = 180, cardw = 140, upper = 0, left = 0;
 
 // Globals whose values will be filled in on window.onload.
 var cards = new Array();
 var timerects;
 
+
 // Mutable Globals
 var lock = false;
-
 
 // Helper functions
 shuffle = function(o){ //v1.0
 	for(var j, x, i = o.length; i; j = parseInt(Math.random() * i), x = o[--i], o[i] = o[j], o[j] = x);
 	return o;
 };
+
+boolmean = function(arr) {
+	count = 0;
+	for (i=0; i<arr.length; i++) {
+		if (arr[i]) { count++; }
+	}
+	return 100* count / arr.length;
+}
 
 // Interface functions
 cardclick = function (cardid) {
@@ -39,11 +53,11 @@ cardclick = function (cardid) {
 				timerects.pop().hide();
 				if (timerects.length == 0) {
 					alert("You have finished! Click OK to go on to the test phase.");
-					window.location = "testphase.html";
+					initializeTest()
 				};
 				lock = false;
 			},
-			2000
+			500
 		);
 	}
 }
@@ -53,7 +67,7 @@ catfun = function ( num ) {
 	return num % 2;
 }
 
-window.onload = function () {
+initializeTraining = function () {
 	var cardh = 180;
 	var cardw = 150;
 	var imgh = 100;
@@ -106,3 +120,84 @@ window.onload = function () {
 	};
 };
 
+
+/********************
+// CODE FOR TEST
+********************/
+
+// Globals defined initially.
+var imgh = 100;
+var imgw = 100;
+
+// Globals whose values will be filled in on window.onload.
+var testcardpaper, testcardsleft;
+var hits = [];
+
+// Funcitons
+function catresponse(buttonid){
+	if ( buttonid=="A" ) selectedcard = 0;
+	else selectedcard = 1;
+	if (selectedcard == catfun(prescard) ) hits.push(true);
+	else hits.push(false);
+	nextcard();
+};
+
+function nextcard() {
+	if (testcardsleft.length==0) {
+		alert( "You got " + boolmean(hits) + "% correct." )
+		postback();
+		return false;
+	}
+	prescard = testcardsleft.pop();
+	testcardpaper.image( cardnames[prescard], 0, 0, imgw, imgh);
+}
+
+appendtobody = function( tag, id, contents ) {
+	el = document.createElement( tag );
+	el.id = id;
+	el.innerHTML = contents;
+	return el;
+}
+
+showtest = function() {
+	// Remove old elements.
+	$('body').empty();
+	
+	// Now add in the new elements.
+  $('body').append(
+			'<hl>Test Demo v1</hl>\
+			<p id="Instructions">Choose a membership for the following object.</p>\
+			<div id="testcanvas"> </div>\
+			<p id="querytext">Which category does the object belong to?\
+			<div id="inputs">\
+				<input type="button" id="CategoryA" value="A" onclick="catresponse(\'A\')">\
+				<input type="button" id="CategoryB" value="B" onclick="catresponse(\'B\')">\
+			</div>'
+		);
+}
+
+
+initializeTest = function () {
+	showtest();
+	
+	var nowX, nowY, w = imgw, h = imgh, r=30;
+	testcardpaper = Raphael(document.getElementById("testcanvas"), w, h)
+	testcardsleft = shuffle( [0,1,2,3,4,5,6,7] );
+	nextcard()
+}
+
+/********************
+// Postback
+********************/
+
+postback = function() {
+	$.ajax("submit.py", {
+		type: "POST",
+		data: hits
+		error: function(jqXHR,textStatus,errorThrown) { setTimeout( postback, 1000 ) }
+	});
+};
+
+
+			{ resps: hits }
+}

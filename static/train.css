@@ -1,0 +1,25 @@
+
+body {
+    background: #999;
+    color: white;
+    text-align: center;
+}
+#holder {
+    border-color: 2px solid white;
+}
+#cardcanvas {
+    margin: 0 auto;
+    text-align: center;
+}
+
+#testcanvas {
+    margin: 0 auto;
+}
+
+#timercanvas {
+    margin: 50px auto;
+}
+
+input {
+    margin: 20px 50px;
+}

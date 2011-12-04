@@ -67,8 +67,8 @@ window.onload = function () {
             cursor: "move"
         });
     for ( i=0; i < catnames.length; i ++ ){ //focus on this part of code...you were trying to draw the category pictures below the grid of cards...you also have a runtime error with card[i].catname
-    	catdisplay[i] = Rtwo.image( catnames[i], cardw % 3 + left, upper, cardw, cardh
-    	)};
+        catdisplay[i] = Rtwo.image( catnames[i], cardw % 3 + left, upper, cardw, cardh
+        )};
     
         cards[i].catname = catnames[ catfun( i ) ];
         cards[i].original = cardnames[i];
