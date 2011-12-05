@@ -367,7 +367,8 @@ var TestPhase = function() {
 	var nextcard = function () {
 		if (! testcardsleft.length) {
 			alert( "You got " + boolmean(ret.hits) + "% correct." );
-			postback();
+                        trainobject = new TrainingPhase();
+			// postback();
 			return false;
 		}
 		prescard = testcardsleft.pop();

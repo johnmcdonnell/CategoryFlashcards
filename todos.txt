@@ -1,3 +1,7 @@
+- Make the thing loop back around.
+- Make the buttons bigger in the instruction phase.
+- Put both versions online.
+- Make the stims shuffle each time.
 - Decide on ISI for test phase (currently 1000ms).
 - Decide on exactly what will happen in the passive condition.
 - Finalize instructions.
