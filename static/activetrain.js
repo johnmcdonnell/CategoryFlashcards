@@ -79,7 +79,7 @@ var testobject;
 // Condition and counterbalance code.
 condition = {
 	traintype: 1, // 0=active, 1=passive
-	rule: 0, // type I-VI -> 0-5.
+	rule: 3, // type I-VI -> 0-5.
 	whichdims: 0, // 0-3; which dimension not to use.
 	dimorder: 0 // 0-5; which order to order the dimensions
 };
@@ -222,7 +222,7 @@ var TrainingPhase = function() {
 	this.next = presentations.pop();
 	this.indicateCard = function(cardid) {
 		that.lock = true;
-		cards[cardid][0].attr({fill:"0A0" });
+		cards[cardid][0].attr({fill:"orange" });
 		setTimeout(
 				function(){
 					cards[cardid][0].attr({fill:"black"});
@@ -320,12 +320,11 @@ $(document).ready( function(){
 
 
 
-
-
 var TestPhase = function() {
 	var i; // just initializing the iterator dummy
 	var that = this; // make 'this' accessble by privileged methods
 	var testcardpaper; 
+	var stimimage;
 	var testcardsleft = new Array();
 	var ret = {
 		hits: new Array()
@@ -350,7 +349,10 @@ var TestPhase = function() {
 		else selectedcard = 1;
 		if (selectedcard == catfun(prescard) ) ret.hits.push(true);
 		else ret.hits.push(false);
-		nextcard();
+		stimimage.hide();
+		setTimeout(
+			nextcard,
+			1000);
 	};
 	
 	var nextcard = function () {
@@ -360,7 +362,7 @@ var TestPhase = function() {
 			return false;
 		}
 		prescard = testcardsleft.pop();
-		testcardpaper.image( cardnames[getstim(prescard)], 0, 0, imgw, imgh);
+		stimimage = testcardpaper.image( cardnames[getstim(prescard)], 0, 0, imgw, imgh);
 		return true;
 	};
 	

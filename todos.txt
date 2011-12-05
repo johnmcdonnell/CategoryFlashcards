@@ -1,0 +1,4 @@
+- Decide on ISI for test phase (currently 1000ms).
+- Decide on exactly what will happen in the passive condition.
+- Collect all interesting data.
+- Finalize instructions.
