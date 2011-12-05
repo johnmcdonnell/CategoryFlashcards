@@ -19,30 +19,40 @@ function shuffle ( myArray ) {
 	return true;
 }
 
-var appendtobody = function( tag, id, contents ) {
-	el = document.createElement( tag );
-	el.id = id;
-	el.innerHTML = contents;
-	return el;
-};
-
-// AJAX post function.
-var postback = function(destination, tosend) {
-	$.ajax("submit.py", {
-		type: "POST",
-		data: tosend
-		// error: function(jqXHR,textStatus,errorThrown) { setTimeout( $.ajax(this), 1000 ); }
-	});
-};
-
 // Mean of booleans (true==1; false==0)
-boolmean = function(arr) {
+function boolmean(arr) {
 	count = 0;
 	for (i=0; i<arr.length; i++) {
 		if (arr[i]) { count++; } 
 	}
 	return 100* count / arr.length;
+}
+
+// View functions
+function appendtobody( tag, id, contents ) {
+	el = document.createElement( tag );
+	el.id = id;
+	el.innerHTML = contents;
+	return el;
+}
+
+function rewriteBody( html ) {
+	$('body').empty();
+	$('body').append( html );
+	
+	return true;
+}
+
+// AJAX post function.
+var postback = function(destination, tosend) {
+	$.ajax("submit.py", {
+		type: "POST",
+		async: false,
+		data: tosend
+		// error: function(jqXHR,textStatus,errorThrown) { setTimeout( $.ajax(this), 1000 ); }
+	});
 };
+
 
 /********************
 // Task code
@@ -78,9 +88,9 @@ var testobject;
 
 // Condition and counterbalance code.
 condition = {
-	traintype: 1, // 0=active, 1=passive
+	traintype: 0, // 0=active, 1=passive
 	rule: 3, // type I-VI -> 0-5.
-	whichdims: 0, // 0-3; which dimension not to use.
+	whichdims: 1, // 0-3; which dimension not to use.
 	dimorder: 0 // 0-5; which order to order the dimensions
 };
 
@@ -164,6 +174,21 @@ var TrainingPhase = function() {
 	// View variables
 	var ncardswide = 4, ncardstall = 2;
 	
+	// Rewrite html
+	activehtml ='<h1>Category task: Active</h1>\
+			<div id="instructions">Click a card to see its category. You can only do this 16 times, as reflected in the timer marks below. Be sure to look at each card at least once.</div>\
+			<div id="cardcanvas"> </div>\
+			<div id="timercanvas"> </div>\
+			<div id="testcanvas"> </div>';
+	
+	passivehtml ='<h1>Category task: Passive</h1>\
+			<div id="instructions">Click on the card indicated by the red border to see its category.</div>\
+			<div id="cardcanvas"> </div>\
+			<div id="timercanvas"> </div>\
+			<div id="testcanvas"> </div>';
+	if ( condition.traintype ) { rewriteBody( passivehtml ); }
+	else { rewriteBody( activehtml ); }
+	
 	// Canvas for the cards.
 	var nowX, nowY, w = ncardswide*cardw, h = ncardstall*cardh, r=30;
 	var cardpaper = Raphael(document.getElementById("cardcanvas"), w, h);
@@ -174,6 +199,11 @@ var TrainingPhase = function() {
 	var w2 = timertotalw, h2 = timertotalh;
 	var timerpaper = Raphael(document.getElementById("timercanvas"), w2, h2);
 	
+	var presentations = [0,1,2,3,4,5,6,7,0,1,2,3,4,5,6,7];
+	shuffle(presentations);
+	this.next = presentations.pop();
+	
+	
 	var timerects = timerpaper.set();
 	timerectw = timertotalw / (sampleunits*2-1);
 	for ( i=0; i < sampleunits; i ++) {
@@ -183,6 +213,7 @@ var TrainingPhase = function() {
 				0,
 				timerectw, timertotalh, [5]).attr({fill:"red" }));
 	}
+	if ( condition.traintype ) { timerects.hide(); }
 	
 	// Category labels are just the letters.
 	
@@ -208,7 +239,7 @@ var TrainingPhase = function() {
 					if ( ! timerects.length ) {
 						// alert( this.ret.searchchoices );
 						alert("You have finished! Click OK to go on to the test phase.");
-						initializeTest();
+						testobject = new TestPhase();
 					}
 					lock = false;
 				},
@@ -217,33 +248,24 @@ var TrainingPhase = function() {
 		};
 	};
 	
-	var presentations = [0,1,2,3,4,5,6,7,0,1,2,3,4,5,6,7];
-	shuffle(presentations);
-	this.next = presentations.pop();
+	var turnon = function(cardid){
+		return function() {
+			cards[cardid][0].attr({stroke: "red", "stroke-width": "5px"});
+		};
+	};
+	var turnoff = function(cardid){
+		return function() {
+			cards[cardid][0].attr({stroke: "black", "stroke-width": "0px"});
+		};
+	};
 	this.indicateCard = function(cardid) {
 		that.lock = true;
-		cards[cardid][0].attr({fill:"orange" });
-		setTimeout(
-				function(){
-					cards[cardid][0].attr({fill:"black"});
-				},
-				100);
-		setTimeout(
-				function(){
-					cards[cardid][0].attr({fill:"orange"});
-				},
-				200);
-		setTimeout(
-				function(){
-					cards[cardid][0].attr({fill:"black"});
-				},
-				300);
-		setTimeout(
-				function(){
-					cards[cardid][0].attr({fill:"orange"});
-					that.lock = false;
-				},
-				400);
+		turnon();
+		setTimeout( turnoff(cardid), 100);
+		setTimeout( turnon(cardid), 200);
+		setTimeout( turnoff(cardid), 300);
+		setTimeout( turnon(cardid), 400);
+		setTimeout( function(){ that.lock=false; }, 400);
 	};
 	this.cardclickPassive = function (cardid) {
 		return function() {
@@ -251,7 +273,7 @@ var TrainingPhase = function() {
 			if ( ! timerects.length ) { return false; }
 			if ( lock ) {  return false; }
 			lock = true;
-			cards[cardid][0].attr({fill:"black"});
+			turnoff(cardid)();
 			cards[cardid][2].show();
 			timestamp = new Date().getTime();
 			that.ret.searchchoices.push( { card:cardid, time: timestamp } );
@@ -293,7 +315,7 @@ var TrainingPhase = function() {
 		}
 	}
 	
-	this.indicateCard(this.next);
+	if ( condition.traintype ) { this.indicateCard(this.next); }
 	
 	// Now for the public methods
 	return {
@@ -311,15 +333,6 @@ $(document).ready( function(){
 // CODE FOR TEST
 ********************/
 
-// Globals defined initially.
-
-// Globals whose values will be filled in on window.onload.
-
-// Functions
-
-
-
-
 var TestPhase = function() {
 	var i; // just initializing the iterator dummy
 	var that = this; // make 'this' accessble by privileged methods
@@ -330,19 +343,15 @@ var TestPhase = function() {
 		hits: new Array()
 	};
 	
-	// Remove old elements.
-	$('body').empty();
-	
-	// Now add in the new elements.
-	$('body').append(
-			'<hl>Test Demo v1</hl>\
-			<p id="Instructions">Choose a membership for the following object.</p>\
+	htmlpage ='<h1>Test Demo v1</h1>\
+			<div id="instructions">Choose a membership for the following object.</div>\
 			<div id="testcanvas"> </div>\
 			<p id="querytext">Which category does the object belong to?\
 			<div id="inputs">\
 				<input type="button" id="CategoryA" value="A" onclick="catresponse(\'A\')">\
 				<input type="button" id="CategoryB" value="B" onclick="catresponse(\'B\')">\
-			</div>');
+			</div>';
+	rewriteBody( htmlpage );
 	
 	catresponse = function (buttonid){
 		if ( buttonid=="A" ) selectedcard = 0;

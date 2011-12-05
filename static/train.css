@@ -1,23 +1,31 @@
 
 body {
-    background: #999;
+    /* background: #999; */
+    background: #808090;
     color: white;
     text-align: center;
 }
+
 #holder {
     border-color: 2px solid white;
 }
+
 #cardcanvas {
-    margin: 0 auto;
-    text-align: center;
+    margin: 20px auto;
 }
 
 #testcanvas {
-    margin: 0 auto;
+    margin: 20px auto;
 }
 
 #timercanvas {
-    margin: 50px auto;
+    margin: 0 auto;
+}
+
+#instructions {
+    text-align: center;
+    width: 550px;
+    margin: 0 auto;
 }
 
 input {

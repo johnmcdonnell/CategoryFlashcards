@@ -1,0 +1,43 @@
+
+body {
+    background: #808090;
+    color: white;
+    text-align: center;
+}
+
+h1 {
+    color: #FFFFFF;
+}
+
+p {
+    text-align: justify;
+}
+
+img {
+    margin: 10px 10px;
+    border: 2px solid black;
+}
+
+input {
+    margin: 20px 20px;
+}
+
+#main {
+    margin: 0 auto;
+    width: 650px;
+}
+
+.legal {
+    font-size: 13px;
+}
+
+.warm {
+    color: #FFDDBB;
+}
+
+.instructions {
+    text-align: center;
+    font-style: italic;
+    font-size: 18px;
+    margin: 0 10px;
+}

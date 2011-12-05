@@ -1,4 +1,6 @@
 - Decide on ISI for test phase (currently 1000ms).
 - Decide on exactly what will happen in the passive condition.
-- Collect all interesting data.
 - Finalize instructions.
+- Collect all interesting data.
+- Talk to server
+- Have something nice happen if server not found.
