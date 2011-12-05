@@ -6,9 +6,10 @@
 
 // Fisher-Yates shuffle algorithm.
 // modified from http://sedition.com/perl/javascript-fy.html
+// TODO: make sure this works okay.
 function shuffle ( myArray ) {
   if ( ! myArray.length ) { return false; }
-  for ( var i=myArray.length; i>0; i-- ) {
+  for ( var i=myArray.length; i>0; --i ) {
      var j = Math.floor( Math.random() * ( i + 1 ) );
      var tempi = myArray[i];
      var tempj = myArray[j];
@@ -88,6 +89,7 @@ initializeTraining = function () {
 
 var TrainingPhase = function() {
 	var i; // just initializing the iterator dummy
+	var that = this; // make 'this' accessble by privileged methods
 	
 	// Globals defined initially.
 	var sampleunits = 16;
@@ -143,7 +145,7 @@ var TrainingPhase = function() {
 			lock = true;
 			cards[cardid][2].show();
 			timestamp = new Date().getTime();
-			this.ret.searchchoices.push( { card:cardid, time: timestamp } );
+			that.ret.searchchoices.push( { card:cardid, time: timestamp } );
 			setTimeout(
 				function(){
 					cards[cardid][2].hide();
@@ -178,13 +180,13 @@ var TrainingPhase = function() {
 	// Now for the public methods
 	return {
 		getresps: function() {
-			return this.ret;
+			return that.ret;
 		}
 	};
 };
 
 $(document).ready( function(){
-	taskobject = TrainingPhase();
+	taskobject = new TrainingPhase();
 });
 
 /********************
@@ -231,7 +233,7 @@ showtest = function() {
 	$('body').empty();
 	
 	// Now add in the new elements.
-  $('body').append(
+	$('body').append(
 			'<hl>Test Demo v1</hl>\
 			<p id="Instructions">Choose a membership for the following object.</p>\
 			<div id="testcanvas"> </div>\
