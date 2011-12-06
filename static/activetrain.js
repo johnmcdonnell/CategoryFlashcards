@@ -171,6 +171,7 @@ var TrainingPhase = function() {
 	
 	// Mutables
 	var lock = false;
+	var animating = false;
 	var cards = new Array();
 	
 	this.ret = {
@@ -235,12 +236,14 @@ var TrainingPhase = function() {
 			if ( ! timerects.length ) { return false; }
 			if ( lock ) {  return false; }
 			lock = true;
+			turnon(cardid)();
 			cards[cardid][2].show();
 			timestamp = new Date().getTime();
 			that.ret.searchchoices.push( { card:cardid, time: timestamp } );
 			setTimeout(
 				function(){
 					cards[cardid][2].hide();
+					turnoff(cardid)();
 					timerects.pop().hide();
 					if ( ! timerects.length ) {
 						// alert( this.ret.searchchoices );
@@ -257,12 +260,12 @@ var TrainingPhase = function() {
 	
 	var turnon = function(cardid){
 		return function() {
-			cards[cardid][0].attr({stroke: "red", "stroke-width": "5px"});
+			cards[cardid][0].attr({"stroke-opacity": 100});
 		};
 	};
 	var turnoff = function(cardid){
 		return function() {
-			cards[cardid][0].attr({stroke: "black", "stroke-width": "0px"});
+			cards[cardid][0].attr({"stroke-opacity": 0});
 		};
 	};
 	this.indicateCard = function(cardid) {
@@ -280,7 +283,6 @@ var TrainingPhase = function() {
 			if ( ! timerects.length ) { return false; }
 			if ( lock ) {  return false; }
 			lock = true;
-			turnoff(cardid)();
 			cards[cardid][2].show();
 			timestamp = new Date().getTime();
 			that.ret.searchchoices.push( { card:cardid, time: timestamp } );
@@ -288,15 +290,18 @@ var TrainingPhase = function() {
 			setTimeout(
 				function(){
 					cards[cardid][2].hide();
+					turnoff(cardid)();
 					timerects.pop().hide();
 					if ( ! timerects.length ) {
 						// alert( this.ret.searchchoices );
 						alert("You have finished! Click OK to go on to the test phase.");
 						testobject = new TestPhase();
 					}
-					shufflecards();
-					that.indicateCard(that.next);
-					lock = false;
+					var callback = function () {
+						that.indicateCard( that.next );
+						lock = false;
+					};
+					shufflecards( callback );
 				},
 				500);
 			return true;
@@ -326,7 +331,7 @@ var TrainingPhase = function() {
 		var imgoffset = (cardw-imgw)/2;
 		
 		cards[i].catnum = catfun( i );
-		cards[i].push( cardpaper.rect( thisleft + (imgoffset/2), thistop+(imgoffset/2), imgw+(imgoffset), cardh-imgoffset).attr({fill:"black" }));
+		cards[i].push( cardpaper.rect( thisleft + (imgoffset/2), thistop+(imgoffset/2), imgw+(imgoffset), cardh-imgoffset).attr({stroke: "red", "stroke-width": "5px", "stroke-opacity": 0}));
 		cards[i].push( cardpaper.image( cardnames[getstim(i)], thisleft + imgoffset, thistop+imgoffset, imgw, imgh) );
 		cards[i].push( cardpaper.text( thisleft + cardw/2, (thistop+imgoffset + thistop+(imgoffset/2) + cardh-imgoffset + imgh)/2, categorynames[cards[i].catnum] ).attr({ fill: "white", "font-size":36 }).hide() );
 		
@@ -338,22 +343,19 @@ var TrainingPhase = function() {
 		}
 	}
 	
-	var shufflecards = function() {
+	var shufflecards = function(callback) {
 		var randomcardplace = new Array();
 		for ( i=0; i < ncards; i ++ ){ 
 			randomcardplace.push( i ); 
-			cards[i][1].hide();
 		}
 		shuffle( randomcardplace );
+		that.animating = true;
 		for ( var i=0; i < ncards; i ++){
 			coords = loc_coords( randomcardplace[i] );
 			cards[i][0].attr({ x: coords.outerx, y: coords.outery });
-			cards[i][1].attr({ x: coords.cardx, y: coords.cardy });
+			cards[i][1].animate({ x: coords.cardx, y: coords.cardy }, 500, "<", callback);
 			cards[i][2].attr({ x: coords.labelx, y: coords.labely });
 			// outerrect = cards[i][0];
-		}
-		for ( i=0; i < ncards; i ++){
-			cards[i][1].show();
 		}
 		return true;
 	};
@@ -368,7 +370,7 @@ var TrainingPhase = function() {
 	};
 };
 
-$(document).ready( function(){
+$(window).load( function(){
 	trainobject = new TrainingPhase();
 });
 

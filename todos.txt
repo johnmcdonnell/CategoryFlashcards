@@ -6,5 +6,6 @@
 - Decide on exactly what will happen in the passive condition.
 - Finalize instructions.
 - Collect all interesting data.
+- We're not counterbalancing the status of the extra item!
 - Talk to server
 - Have something nice happen if server not found.
