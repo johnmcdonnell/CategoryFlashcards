@@ -4,6 +4,7 @@ body {
     background: black; /* #808090; */
     color: white;
     text-align: center;
+    font-family: Verdana, Helvetica, sans-serif;
 }
 
 #holder {
@@ -30,4 +31,7 @@ body {
 
 input {
     margin: 20px 50px;
+    width: 100px;
+    height: 50px;
+    font-size: 22pt;
 }

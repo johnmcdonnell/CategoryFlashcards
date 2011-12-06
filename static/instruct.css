@@ -1,8 +1,10 @@
 
 body {
-    background: #808090;
+    /* background: #808090; */
+    background: black;
     color: white;
     text-align: center;
+    font-family: Verdana, Helvetica, sans;
 }
 
 h1 {
@@ -20,24 +22,37 @@ img {
 
 input {
     margin: 20px 20px;
+    width: 120px;
+    height: 40px;
+    font-size: 13pt;
 }
 
 #main {
     margin: 0 auto;
-    width: 650px;
+    width: 680px;
+    font-size: 14px;
+}
+
+P#main {
 }
 
 .legal {
-    font-size: 13px;
+    font-size: 11px;
 }
 
 .warm {
-    color: #FFCCAA;
+    color: #EEBBAA;
+}
+
+.header {
+    text-align: justify;
+    font-style: italic;
 }
 
 .instructions {
     text-align: center;
     font-style: italic;
     font-size: 18px;
-    margin: 0 10px;
+    margin: 0 auto;
+    width: 500px;
 }

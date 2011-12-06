@@ -94,10 +94,10 @@ var testobject;
 
 // Condition and counterbalance code.
 condition = {
-	traintype: Math.randrange(0,2) , // 0=active, 1=passive
-	rule: Math.randrange(0,6), // type I-VI -> 0-5.
-	whichdims: Math.randrange(0,4), // 0-3; which dimension not to use.
-	dimorder: Math.randrange(0,6) // 0-5; which order to order the dimensions
+	traintype: randrange(0,2) , // 0=active, 1=passive
+	rule: randrange(0,6), // type I-VI -> 0-5.
+	whichdims: randrange(0,4), // 0-3; which dimension not to use.
+	dimorder: randrange(0,6) // 0-5; which order to order the dimensions
 };
 
 // Task functions
@@ -247,6 +247,7 @@ var TrainingPhase = function() {
 						alert("You have finished! Click OK to go on to the test phase.");
 						testobject = new TestPhase();
 					}
+					shufflecards();
 					lock = false;
 				},
 				500);
@@ -293,6 +294,7 @@ var TrainingPhase = function() {
 						alert("You have finished! Click OK to go on to the test phase.");
 						testobject = new TestPhase();
 					}
+					shufflecards();
 					that.indicateCard(that.next);
 					lock = false;
 				},
@@ -301,11 +303,26 @@ var TrainingPhase = function() {
 		};
 	};
 	
+	var loc_coords = function ( loci ) {
+		var x = cardw * (loci % 4) + left;
+		var y = cardh*Math.floor(loci/4) + upper;
+		var imgoffset = (cardw-imgw)/2;
+		return {
+			x: x,
+			y: y,
+			outerx: x + (imgoffset/2),
+			outery: y + (imgoffset/2),
+			cardx: x + imgoffset,
+			cardy: y + imgoffset,
+			labelx: x + cardw/2,
+			labely: (y+imgoffset + y+(imgoffset/2) + cardh-imgoffset + imgh)/2
+		};
+	};
+	
 	for ( i=0; i < ncards; i ++){
-		var cardloci = randomcardplace[i];
 		cards[i] = cardpaper.set();
-		var thisleft = cardw * (cardloci % 4) + left;
-		var thistop = cardh*Math.floor(cardloci/4) + upper;
+		coords = loc_coords( randomcardplace[i] );
+		var thisleft = coords.x, thistop = coords.y;
 		var imgoffset = (cardw-imgw)/2;
 		
 		cards[i].catnum = catfun( i );
@@ -320,6 +337,26 @@ var TrainingPhase = function() {
 			cards[i].click( this.cardclickActive(i) );
 		}
 	}
+	
+	var shufflecards = function() {
+		var randomcardplace = new Array();
+		for ( i=0; i < ncards; i ++ ){ 
+			randomcardplace.push( i ); 
+			cards[i][1].hide();
+		}
+		shuffle( randomcardplace );
+		for ( var i=0; i < ncards; i ++){
+			coords = loc_coords( randomcardplace[i] );
+			cards[i][0].attr({ x: coords.outerx, y: coords.outery });
+			cards[i][1].attr({ x: coords.cardx, y: coords.cardy });
+			cards[i][2].attr({ x: coords.labelx, y: coords.labely });
+			// outerrect = cards[i][0];
+		}
+		for ( i=0; i < ncards; i ++){
+			cards[i][1].show();
+		}
+		return true;
+	};
 	
 	if ( condition.traintype ) { this.indicateCard(this.next); }
 	
