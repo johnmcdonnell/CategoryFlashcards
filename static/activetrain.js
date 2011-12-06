@@ -4,13 +4,19 @@
 ********************/
 // Helper functions
 
+
+function randrange ( lower, upperbound ) {
+	// Finds a random integer from 'lower' to 'upperbound-1'
+	return Math.floor( Math.random() * upperbound + lower );
+}
+
 // Fisher-Yates shuffle algorithm.
 // modified from http://sedition.com/perl/javascript-fy.html
 // TODO: make sure this works okay.
 function shuffle ( myArray ) {
 	if ( ! myArray.length ) { return false; }
 	for ( var i=myArray.length-1; i>=0; --i ) {
-		var j = Math.floor( Math.random() * ( i + 1 ) );
+		var j = randrange(0, i+1 );
 		var tempi = myArray[i];
 		var tempj = myArray[j];
 		myArray[i] = tempj;
@@ -88,10 +94,10 @@ var testobject;
 
 // Condition and counterbalance code.
 condition = {
-	traintype: 0, // 0=active, 1=passive
-	rule: 3, // type I-VI -> 0-5.
-	whichdims: 1, // 0-3; which dimension not to use.
-	dimorder: 0 // 0-5; which order to order the dimensions
+	traintype: Math.randrange(0,2) , // 0=active, 1=passive
+	rule: Math.randrange(0,6), // type I-VI -> 0-5.
+	whichdims: Math.randrange(0,4), // 0-3; which dimension not to use.
+	dimorder: Math.randrange(0,6) // 0-5; which order to order the dimensions
 };
 
 // Task functions
@@ -102,7 +108,7 @@ catfuns = [
 	},
 	function (num) {
 		// Shepard type II
-		return (num&2/2)^(num&1);
+		return ((num&2)/2)^(num&1);
 	},
 	function (num) {
 		// Shepard type III
