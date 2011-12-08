@@ -1,6 +1,6 @@
 
 /********************
-// Domain general code
+/ Domain general code
 ********************/
 // Helper functions
 
@@ -13,17 +13,31 @@ function randrange ( lower, upperbound ) {
 // Fisher-Yates shuffle algorithm.
 // modified from http://sedition.com/perl/javascript-fy.html
 // TODO: make sure this works okay.
-function shuffle ( myArray ) {
-	if ( ! myArray.length ) { return false; }
-	for ( var i=myArray.length-1; i>=0; --i ) {
-		var j = randrange(0, i+1 );
-		var tempi = myArray[i];
-		var tempj = myArray[j];
-		myArray[i] = tempj;
-		myArray[j] = tempi;
+function shuffle( arr, exceptions ) {
+	var i;
+	if ( exceptions && exceptions.length ) {
+		shufflelocations = new Array();
+		for (i=0; i<arr.length; i++) {
+			if (exceptions.indexOf(i)==-1) { shufflelocations.push(i); }
+		}
 	}
-	return true;
+	else { 
+		shufflelocations = new Array();
+		for (i=0; i<arr.length; i++) {
+			shufflelocations.push(i);
+		}
+	}
+	for (i=shufflelocations.length-1; i>=0; --i) {
+		var loci = shufflelocations[i];
+		var locj = shufflelocations[randrange(0, i+1)];
+		var tempi = arr[loci];
+		var tempj = arr[locj];
+		arr[loci] = tempj;
+		arr[locj] = tempi;
+	}
+	return shufflelocations;
 }
+
 
 // Mean of booleans (true==1; false==0)
 function boolmean(arr) {
@@ -138,8 +152,8 @@ var catfun = catfuns[condition.rule];
 
 getstim = function(theorystim) {
 	bits = [theorystim&1 ? 1 : 0,
-	        theorystim&2 ? 1 : 0,
-	        theorystim&4 ? 1 : 0];
+			theorystim&2 ? 1 : 0,
+			theorystim&4 ? 1 : 0];
 	var multiples = [1, 2, 4, 8];
 	multiples.splice(condition.whichdims, 1);
 	
@@ -220,16 +234,18 @@ var TrainingPhase = function() {
 				0,
 				timerectw, timertotalh, [5]).attr({fill:"red" }));
 	}
-	if ( condition.traintype ) { timerects.hide(); }
 	
 	// Category labels are just the letters.
 	
 	// Card locations are randomized.
-	var randomcardplace = new Array();
+	this.cardlocs = new Array();
 	for ( i=0; i < ncards; i ++ ){ 
-		randomcardplace.push( i ); 
+		this.cardlocs.push( i ); 
 	}
-	shuffle( randomcardplace );
+	shuffle( this.cardlocs );
+
+	// recent cards; will not move after next selection.
+	this.lastcards = [undefined,undefined];
 	
 	this.cardclickActive = function (cardid) {
 		return function() {
@@ -240,6 +256,8 @@ var TrainingPhase = function() {
 			cards[cardid][2].show();
 			timestamp = new Date().getTime();
 			that.ret.searchchoices.push( { card:cardid, time: timestamp } );
+			that.lastcards.splice(0,1);
+			that.lastcards.push( cardid );
 			setTimeout(
 				function(){
 					cards[cardid][2].hide();
@@ -250,7 +268,11 @@ var TrainingPhase = function() {
 						alert("You have finished! Click OK to go on to the test phase.");
 						testobject = new TestPhase();
 					}
-					shufflecards();
+					var callback = function () {
+						//that.indicateCard( that.next );
+						lock = false;
+					};
+					shufflecards( callback, that.lastcards );
 					lock = false;
 				},
 				500);
@@ -287,10 +309,12 @@ var TrainingPhase = function() {
 			timestamp = new Date().getTime();
 			that.ret.searchchoices.push( { card:cardid, time: timestamp } );
 			that.next = presentations.pop();
+			that.lastcards.splice(0,1);
+			that.lastcards.push( cardid );
 			setTimeout(
 				function(){
 					cards[cardid][2].hide();
-					turnoff(cardid)();
+					jurnoff(cardid)();
 					timerects.pop().hide();
 					if ( ! timerects.length ) {
 						// alert( this.ret.searchchoices );
@@ -301,7 +325,7 @@ var TrainingPhase = function() {
 						that.indicateCard( that.next );
 						lock = false;
 					};
-					shufflecards( callback );
+					shufflecards( callback, that.lastcards );
 				},
 				500);
 			return true;
@@ -326,12 +350,15 @@ var TrainingPhase = function() {
 	
 	for ( i=0; i < ncards; i ++){
 		cards[i] = cardpaper.set();
-		coords = loc_coords( randomcardplace[i] );
+		coords = loc_coords( this.cardlocs[i] );
 		var thisleft = coords.x, thistop = coords.y;
 		var imgoffset = (cardw-imgw)/2;
 		
 		cards[i].catnum = catfun( i );
-		cards[i].push( cardpaper.rect( thisleft + (imgoffset/2), thistop+(imgoffset/2), imgw+(imgoffset), cardh-imgoffset).attr({stroke: "red", "stroke-width": "5px", "stroke-opacity": 0}));
+		cards[i].push( cardpaper.rect( thisleft + (imgoffset/2),
+					thistop+(imgoffset/2), imgw+(imgoffset),
+					cardh-imgoffset).attr(
+						{stroke: "red", "stroke-width": "5px", "stroke-opacity": 0}));
 		cards[i].push( cardpaper.image( cardnames[getstim(i)], thisleft + imgoffset, thistop+imgoffset, imgw, imgh) );
 		cards[i].push( cardpaper.text( thisleft + cardw/2, (thistop+imgoffset + thistop+(imgoffset/2) + cardh-imgoffset + imgh)/2, categorynames[cards[i].catnum] ).attr({ fill: "white", "font-size":36 }).hide() );
 		
@@ -343,15 +370,11 @@ var TrainingPhase = function() {
 		}
 	}
 	
-	var shufflecards = function(callback) {
-		var randomcardplace = new Array();
-		for ( i=0; i < ncards; i ++ ){ 
-			randomcardplace.push( i ); 
-		}
-		shuffle( randomcardplace );
+	var shufflecards = function(callback, exceptions) {
+		shuffle( that.cardlocs, exceptions );
 		that.animating = true;
 		for ( var i=0; i < ncards; i ++){
-			coords = loc_coords( randomcardplace[i] );
+			coords = loc_coords( that.cardlocs[i] );
 			cards[i][0].attr({ x: coords.outerx, y: coords.outery });
 			cards[i][1].animate({ x: coords.cardx, y: coords.cardy }, 500, "<", callback);
 			cards[i][2].attr({ x: coords.labelx, y: coords.labely });
@@ -364,15 +387,9 @@ var TrainingPhase = function() {
 	
 	// Now for the public methods
 	return {
-		getresps: function() {
-			return that.ret;
-		}
+		obj: that // Remove this in actual experiment.
 	};
 };
-
-$(window).load( function(){
-	trainobject = new TrainingPhase();
-});
 
 /********************
 // CODE FOR TEST
@@ -412,7 +429,7 @@ var TestPhase = function() {
 	var nextcard = function () {
 		if (! testcardsleft.length) {
 			alert( "You got " + boolmean(ret.hits) + "% correct." );
-                        trainobject = new TrainingPhase();
+						trainobject = new TrainingPhase();
 			// postback();
 			return false;
 		}
@@ -435,5 +452,16 @@ var TestPhase = function() {
 };
 
 
+/********************
+// Get things started
+********************/
 
+// Provide opt-out 
+//$(window).bind('beforeunload', function(){
+//	alert( "By leaving this page, you opt out of the experiment. Please confirm that this is what you meant to do." );
+//	return ("Are you sure you want to leave the experiment?");
+//});
+$(window).load( function(){
+	trainobject = new TrainingPhase();
+});
 
