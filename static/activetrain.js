@@ -2,10 +2,12 @@
 /**********************
 * Domain general code *
 **********************/
+
+
 // Helper functions
 
 /** 
- * Substitute placeholders with string values 
+ * SUBSTITUTE PLACEHOLDERS WITH string values 
  * @param {String} str The string containing the placeholders 
  * @param {Array} arr The array of values to substitute 
  * From Fotiman on this forum:
@@ -71,13 +73,6 @@ function appendtobody( tag, id, contents ) {
 	el.id = id;
 	el.innerHTML = contents;
 	return el;
-}
-
-function rewriteBody( html ) {
-	$('body').empty();
-	$('body').html( html );
-	
-	return true;
 }
 
 // AJAX post function.
@@ -191,9 +186,6 @@ getstim = function(theorystim) {
 /********************
 * CODE FOR TRAINING *
 ********************/
-
-
-// Interface object
 
 var TrainingPhase = function() {
 	var i; // just initializing the iterator dummy
