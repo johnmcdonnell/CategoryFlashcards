@@ -122,7 +122,7 @@ var cardh = 180, cardw = 140, upper = 0, left = 0,
 // Condition and counterbalance code.
 condition = {
 	traintype: randrange(0,2) , // 0=active, 1=passive
-	rule: 0,//randrange(0,6), // type I-VI -> 0-5.
+	rule: randrange(0,6), // type I-VI -> 0-5.
 	whichdims: randrange(0,4), // 0-3; which dimension not to use.
 	dimorder: randrange(0,6) // 0-5; which order to order the dimensions
 };
