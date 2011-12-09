@@ -1,9 +1,26 @@
 
-/********************
-/ Domain general code
-********************/
+/**********************
+* Domain general code *
+**********************/
 // Helper functions
 
+/** 
+ * Substitute placeholders with string values 
+ * @param {String} str The string containing the placeholders 
+ * @param {Array} arr The array of values to substitute 
+ * From Fotiman on this forum:
+ * http://www.webmasterworld.com/javascript/3484761.htm
+ */ 
+function substitute(str, arr) 
+{ 
+  var i, pattern, re, n = arr.length; 
+  for (i = 0; i < n; i++) { 
+    pattern = "\\{" + i + "\\}"; 
+    re = new RegExp(pattern, "g"); 
+    str = str.replace(re, arr[i]); 
+  } 
+  return str; 
+} 
 
 function randrange ( lower, upperbound ) {
 	// Finds a random integer from 'lower' to 'upperbound-1'
@@ -75,7 +92,7 @@ var postback = function(destination, tosend) {
 
 
 /********************
-// Task code
+* TASK-GENERAL CODE *
 ********************/
 
 // Globals defined initially.
@@ -171,7 +188,7 @@ getstim = function(theorystim) {
 
 
 /********************
-// CODE FOR TRAINING
+* CODE FOR TRAINING *
 ********************/
 
 
@@ -216,7 +233,7 @@ var TrainingPhase = function() {
 	var cardpaper = Raphael(document.getElementById("cardcanvas"), w, h);
 	
 	// Canvas for the timer.
-	var timertotalw = w/2;
+	var timertotalw = w*2/3;
 	var timertotalh = 50;
 	var w2 = timertotalw, h2 = timertotalh;
 	var timerpaper = Raphael(document.getElementById("timercanvas"), w2, h2);
@@ -226,12 +243,14 @@ var TrainingPhase = function() {
 	this.next = presentations.pop();
 	
 	
+	var textsize = 42;
 	var timerects = timerpaper.set();
-	timerectw = timertotalw / (sampleunits*2-1);
+	timerectw = timertotalw / (sampleunits*2-2+10);
+	var timetext = timerpaper.text( textsize/2, h2/2, sampleunits ).attr({fill:"white","font-size":textsize});
 	for ( i=0; i < sampleunits; i ++) {
 		timerects.push(
 			timerpaper.rect(
-				timerectw * i * 2,
+				timerectw * i * 2 + textsize*1.5,
 				0,
 				timerectw, timertotalh, [5]).attr({fill:"red" }));
 	}
@@ -293,10 +312,14 @@ var TrainingPhase = function() {
 					cards[cardid][2].hide();
 					turnoff(cardid)();
 					timerects.pop().attr({fill: "gray"});
-					if ( ! timerects.length ) {
-						// alert( this.ret.searchchoices );
-						alert("You have finished! Click OK to go on to the test phase.");
-						testobject = new TestPhase();
+					timetext.attr({text:timerects.length});
+					if ( timerects.length===0 ) {
+						$('body').html('<h1>Training Complete</h1>\
+							<p>Training complete! Press "Continue" to move on to the test phase.</p>\
+							<input type="button" id="continue" value="Continue"></input>');
+						$('#continue').click( function(){ testobject = new TestPhase(); } );
+						$('#continue').attr('style', 'width: auto;');
+						$("p").attr("style", "font-size: 150%");
 					}
 					var callback = function () {
 						if (condition.traintype==1) {
@@ -365,68 +388,97 @@ var TrainingPhase = function() {
 };
 
 /********************
-// CODE FOR TEST
+* CODE FOR TEST     *
 ********************/
 
 var TestPhase = function() {
-	var i; // just initializing the iterator dummy
-	var that = this; // make 'this' accessble by privileged methods
-	var testcardpaper; 
-	var stimimage;
-	var testcardsleft = new Array();
-	var ret = {
+	var i,
+	    that = this, // make 'this' accessble by privileged methods
+		lock,
+	    stimimage,
+	    testcardsleft = new Array();
+	this.ret = {
 		hits: new Array()
 	};
 	
-	htmlpage ='<h1>Test Demo v1</h1>\
+	htmlpage ='<h1>Test Phase</h1>\
 			<div id="instructions">Choose a membership for the following object.</div>\
-			<div id="testcanvas"> </div>\
-			<p id="querytext">Which category does the object belong to?\
+			<img src="" id="stim">\
+			<div id="query"></div>';
+	query = '<p id="prompt">Which category does the object belong to?\
 			<div id="inputs">\
-				<input type="button" id="CategoryA" value="A" onclick="catresponse(\'A\')">\
-				<input type="button" id="CategoryB" value="B" onclick="catresponse(\'B\')">\
+				<input type="button" id="CategoryA" value="A">\
+				<input type="button" id="CategoryB" value="B">\
 			</div>';
+	acknowledgment = '<p>Thanks for your response!';
 	$('body').html( htmlpage );
 	
+	var addbuttons = function() {
+		$('#query').html( query );
+		$('input').click( function(){catresponse(this.value);} );
+		$('#query').show();
+	};
+	
 	catresponse = function (buttonid){
+		if (lock) { return false; }
 		if ( buttonid=="A" ) selectedcard = 0;
 		else selectedcard = 1;
-		if (selectedcard == catfun(prescard) ) ret.hits.push(true);
-		else ret.hits.push(false);
-		stimimage.hide();
-		setTimeout(
-			nextcard,
+		if (selectedcard == catfun(prescard)) { that.ret.hits.push(true); }
+		else that.ret.hits.push(false);
+		lock = true;
+		$('#query').html(acknowledgment);
+		setTimeout( function() { 
+				$("#stim").hide();
+				$("#query").hide();
+			}, 
+			500);
+		setTimeout( function(){
+				nextcard();
+			},
 			1000);
+		return false;
+	};
+	
+	var finishblock = function() {
+		$('body').html('<h1>Test phase Complete</h1>\
+			<p>Training phase complete! You got ' + boolmean(that.ret.hits) + '% correct.</p>\
+			<p>Press "Continue" to move on to the next training block.</p>\
+			<input type="button" id="continue" value="Continue"></input>');
+		$('#continue').click( function(){ trainobject = new TrainingPhase(); } );
+		$('#continue').attr('style', 'width: auto;');
+		$("p").attr("style", "font-size: 150%");
+		// postback();
 	};
 	
 	var nextcard = function () {
-		if (! testcardsleft.length) {
-			alert( "You got " + boolmean(ret.hits) + "% correct." );
-						trainobject = new TrainingPhase();
-			// postback();
-			return false;
+		if (! testcardsleft.length) finishblock();
+		else {
+			prescard = testcardsleft.pop();
+			//stimimage = testcardpaper.image( cardnames[getstim(prescard)], 0, 0, imgw, imgh);
+			$("#stim").attr("src", cardnames[getstim(prescard)]);
+			$('#stim').show();
+			setTimeout(
+				function(){
+					lock=false;
+					addbuttons();
+				},
+				500);
 		}
-		prescard = testcardsleft.pop();
-		stimimage = testcardpaper.image( cardnames[getstim(prescard)], 0, 0, imgw, imgh);
-		return true;
 	};
 	
-	var nowX, nowY, w = imgw, h = imgh, r=30;
-	testcardpaper = Raphael(document.getElementById("testcanvas"), w, h);
+	//testcardpaper = Raphael(document.getElementById("testcanvas"), w, h);
 	testcardsleft = [0,1,2,3,4,5,6,7];
 	shuffle(testcardsleft);
+	$("#stim").attr("width", imgw);
+	$('#query').hide();
 	nextcard();
 	
-	return {
-		getresps: function() {
-			return that.ret;
-		}
-	};
+	return this;
 };
 
 
-/********************
-// Get things started
+/*********************
+* Get things started *
 ********************/
 
 // Provide opt-out 
@@ -436,5 +488,7 @@ var TestPhase = function() {
 //});
 $(window).load( function(){
 	trainobject = new TrainingPhase();
+	//testobject = new TestPhase();
 });
+
 

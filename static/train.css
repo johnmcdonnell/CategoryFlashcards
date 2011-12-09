@@ -29,6 +29,10 @@ body {
     margin: 0 auto;
 }
 
+#stim {
+    margin: 20px auto;
+}
+
 input {
     margin: 20px 50px;
     width: 100px;
