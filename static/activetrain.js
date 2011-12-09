@@ -57,7 +57,7 @@ function shuffle( arr, exceptions ) {
 
 
 // Mean of booleans (true==1; false==0)
-function boolmean(arr) {
+function boolpercent(arr) {
 	count = 0;
 	for (i=0; i<arr.length; i++) {
 		if (arr[i]) { count++; } 
@@ -117,16 +117,17 @@ var cardnames = [
 
 var categorynames= [ "A", "B" ];
 
-var cardh = 180, cardw = 140, upper = 0, left = 0;
-var imgh = 100, imgw = 100;
-var subjid = 0;
-var trainobject;
-var testobject;
+var cardh = 180, cardw = 140, upper = 0, left = 0,
+    imgh = 100, imgw = 100,
+    subjid = 0,
+    lastperfect = false,
+    trainobject,
+    testobject;
 
 // Condition and counterbalance code.
 condition = {
 	traintype: randrange(0,2) , // 0=active, 1=passive
-	rule: randrange(0,6), // type I-VI -> 0-5.
+	rule: 0,//randrange(0,6), // type I-VI -> 0-5.
 	whichdims: randrange(0,4), // 0-3; which dimension not to use.
 	dimorder: randrange(0,6) // 0-5; which order to order the dimensions
 };
@@ -320,6 +321,7 @@ var TrainingPhase = function() {
 						$('#continue').click( function(){ testobject = new TestPhase(); } );
 						$('#continue').attr('style', 'width: auto;');
 						$("p").attr("style", "font-size: 150%");
+						return true;
 					}
 					var callback = function () {
 						if (condition.traintype==1) {
@@ -328,6 +330,7 @@ var TrainingPhase = function() {
 						lock = false;
 					};
 					shufflecards( callback, that.lastcards );
+					return true;
 				},
 				1000);
 			return true;
@@ -439,10 +442,23 @@ var TestPhase = function() {
 		return false;
 	};
 	
+	var givequestionnaire = function() {
+		$('body').html('<h1>Task Complete</h1>\
+			<p>Congratulations, you had two perfect two perfect test phases in\
+			a row! This means you have successfully learned the category distinction.\
+			<p>Before you go, we\'d like you to answer a few questions for us.</p>\
+			<input type="button" id="continue" value="Continue"></input>');
+		// $('#continue').click( function(){ trainobject = new TrainingPhase(); } );
+		$('#continue').attr('style', 'width: auto;');
+		$("p").attr("style", "font-size: 150%");
+		// postback();
+	};
+	
 	var finishblock = function() {
 		$('body').html('<h1>Test phase Complete</h1>\
-			<p>Training phase complete! You got ' + boolmean(that.ret.hits) + '% correct.</p>\
-			<p>Press "Continue" to move on to the next training block.</p>\
+			<p>Training phase complete! You got ' + boolpercent(that.ret.hits) + '% correct.</p>' +
+			((boolpercent(that.ret.hits)==100) ? '\r<p>Just one more round like that and you\'ll be done!' : "") +
+			'<p>Press "Continue" to move on to the next training block.</p>\
 			<input type="button" id="continue" value="Continue"></input>');
 		$('#continue').click( function(){ trainobject = new TrainingPhase(); } );
 		$('#continue').attr('style', 'width: auto;');
@@ -451,7 +467,16 @@ var TestPhase = function() {
 	};
 	
 	var nextcard = function () {
-		if (! testcardsleft.length) finishblock();
+		var done = false;
+		if (! testcardsleft.length) {
+			if ( boolpercent(that.ret.hits)==100 ) {
+				if ( lastperfect ) done = true;
+				lastperfect = true;
+			}
+			else lastperfect=false;
+			if (done) givequestionnaire();
+			else finishblock();
+		}
 		else {
 			prescard = testcardsleft.pop();
 			//stimimage = testcardpaper.image( cardnames[getstim(prescard)], 0, 0, imgw, imgh);
