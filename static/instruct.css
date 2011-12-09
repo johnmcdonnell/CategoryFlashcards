@@ -56,3 +56,10 @@ P#main {
     margin: 0 auto;
     width: 500px;
 }
+
+.subbox {
+    width: 500px;
+    margin: 20px auto;
+    padding: 5px 20px;
+    border: 1px solid white;
+}

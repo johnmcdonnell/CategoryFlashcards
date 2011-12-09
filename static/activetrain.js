@@ -278,7 +278,7 @@ var TrainingPhase = function() {
 		setTimeout(turnon(cardid), 200);
 		setTimeout(turnoff(cardid), 300);
 		setTimeout(turnon(cardid), 400);
-		setTimeout(function(){ that.lock=false; }, 400);
+		setTimeout(function(){ lock=false; }, 400);
 	};
 	
 	this.cardclick = function (cardid) {
@@ -319,7 +319,7 @@ var TrainingPhase = function() {
 						if (condition.traintype==1) {
 							that.indicateCard( that.next );
 						}
-						lock = false;
+						else setTimeout( function(){ lock=false; }, 400); 
 					};
 					shufflecards( callback, that.lastcards );
 					return true;
