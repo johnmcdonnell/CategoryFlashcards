@@ -58,7 +58,7 @@ function appendtobody( tag, id, contents ) {
 
 function rewriteBody( html ) {
 	$('body').empty();
-	$('body').append( html );
+	$('body').html( html );
 	
 	return true;
 }
@@ -116,7 +116,7 @@ condition = {
 
 // Task functions
 catfuns = [
-	function ( num ) {
+	function (num) {
 		// Shepard type I
 		return num % 2;
 	},
@@ -196,19 +196,20 @@ var TrainingPhase = function() {
 	var ncardswide = 4, ncardstall = 2;
 	
 	// Rewrite html
-	activehtml ='<h1>Category task: Active</h1>\
+	if ( condition.traintype===0 ) {
+		$('body').html('<h1>Category task: Active</h1>\
 			<div id="instructions">Click a card to see its category. You can only do this 16 times, as reflected in the timer marks below. Be sure to look at each card at least once.</div>\
 			<div id="cardcanvas"> </div>\
 			<div id="timercanvas"> </div>\
-			<div id="testcanvas"> </div>';
-	
-	passivehtml ='<h1>Category task: Passive</h1>\
+			<div id="testcanvas"> </div>');
+	}
+	else{
+		$('body').html( '<h1>Category task: Passive</h1>\
 			<div id="instructions">Click on the card indicated by the red border to see its category.</div>\
 			<div id="cardcanvas"> </div>\
 			<div id="timercanvas"> </div>\
-			<div id="testcanvas"> </div>';
-	if ( condition.traintype ) { rewriteBody( passivehtml ); }
-	else { rewriteBody( activehtml ); }
+			<div id="testcanvas"> </div>');
+	}
 	
 	// Canvas for the cards.
 	var nowX, nowY, w = ncardswide*cardw, h = ncardstall*cardh, r=30;
@@ -243,43 +244,11 @@ var TrainingPhase = function() {
 		this.cardlocs.push( i ); 
 	}
 	shuffle( this.cardlocs );
-
+	
 	// recent cards; will not move after next selection.
 	this.lastcards = [undefined,undefined];
 	
-	this.cardclickActive = function (cardid) {
-		return function() {
-			if ( ! timerects.length ) { return false; }
-			if ( lock ) {  return false; }
-			lock = true;
-			turnon(cardid)();
-			cards[cardid][2].show();
-			timestamp = new Date().getTime();
-			that.ret.searchchoices.push( { card:cardid, time: timestamp } );
-			that.lastcards.splice(0,1);
-			that.lastcards.push( cardid );
-			setTimeout(
-				function(){
-					cards[cardid][2].hide();
-					turnoff(cardid)();
-					timerects.pop().hide();
-					if ( ! timerects.length ) {
-						// alert( this.ret.searchchoices );
-						alert("You have finished! Click OK to go on to the test phase.");
-						testobject = new TestPhase();
-					}
-					var callback = function () {
-						//that.indicateCard( that.next );
-						lock = false;
-					};
-					shufflecards( callback, that.lastcards );
-					lock = false;
-				},
-				500);
-			return true;
-		};
-	};
-	
+	// Card hilighting functions:
 	var turnon = function(cardid){
 		return function() {
 			cards[cardid][0].attr({"stroke-opacity": 100});
@@ -293,41 +262,51 @@ var TrainingPhase = function() {
 	this.indicateCard = function(cardid) {
 		that.lock = true;
 		turnon();
-		setTimeout( turnoff(cardid), 100);
-		setTimeout( turnon(cardid), 200);
-		setTimeout( turnoff(cardid), 300);
-		setTimeout( turnon(cardid), 400);
-		setTimeout( function(){ that.lock=false; }, 400);
+		setTimeout(turnoff(cardid), 100);
+		setTimeout(turnon(cardid), 200);
+		setTimeout(turnoff(cardid), 300);
+		setTimeout(turnon(cardid), 400);
+		setTimeout(function(){ that.lock=false; }, 400);
 	};
-	this.cardclickPassive = function (cardid) {
+	
+	this.cardclick = function (cardid) {
 		return function() {
-			if ( that.next != cardid ) { return false; }
+			if (condition.traintype==1) {
+				if ( that.next != cardid ) { return false; }
+			}
 			if ( ! timerects.length ) { return false; }
 			if ( lock ) {  return false; }
+			if (condition.traintype===0) {
+				turnon(cardid)();
+			}
+			else {
+				that.next = presentations.pop();
+			}
 			lock = true;
 			cards[cardid][2].show();
 			timestamp = new Date().getTime();
 			that.ret.searchchoices.push( { card:cardid, time: timestamp } );
-			that.next = presentations.pop();
 			that.lastcards.splice(0,1);
 			that.lastcards.push( cardid );
 			setTimeout(
 				function(){
 					cards[cardid][2].hide();
-					jurnoff(cardid)();
-					timerects.pop().hide();
+					turnoff(cardid)();
+					timerects.pop().attr({fill: "gray"});
 					if ( ! timerects.length ) {
 						// alert( this.ret.searchchoices );
 						alert("You have finished! Click OK to go on to the test phase.");
 						testobject = new TestPhase();
 					}
 					var callback = function () {
-						that.indicateCard( that.next );
+						if (condition.traintype==1) {
+							that.indicateCard( that.next );
+						}
 						lock = false;
 					};
 					shufflecards( callback, that.lastcards );
 				},
-				500);
+				1000);
 			return true;
 		};
 	};
@@ -362,12 +341,7 @@ var TrainingPhase = function() {
 		cards[i].push( cardpaper.image( cardnames[getstim(i)], thisleft + imgoffset, thistop+imgoffset, imgw, imgh) );
 		cards[i].push( cardpaper.text( thisleft + cardw/2, (thistop+imgoffset + thistop+(imgoffset/2) + cardh-imgoffset + imgh)/2, categorynames[cards[i].catnum] ).attr({ fill: "white", "font-size":36 }).hide() );
 		
-		if (condition.traintype) {
-			cards[i].click( this.cardclickPassive(i) );
-		}
-		else {
-			cards[i].click( this.cardclickActive(i) );
-		}
+		cards[i].click( this.cardclick(i) );
 	}
 	
 	var shufflecards = function(callback, exceptions) {
@@ -383,12 +357,11 @@ var TrainingPhase = function() {
 		return true;
 	};
 	
-	if ( condition.traintype ) { this.indicateCard(this.next); }
+	if ( condition.traintype==1 ) { this.indicateCard(this.next); }
 	
-	// Now for the public methods
-	return {
-		obj: that // Remove this in actual experiment.
-	};
+	// Usually this would be a dictionary of public methods but 
+	// I'm exporting the whole thing, which will make everything accessible.
+	return this;
 };
 
 /********************
@@ -413,7 +386,7 @@ var TestPhase = function() {
 				<input type="button" id="CategoryA" value="A" onclick="catresponse(\'A\')">\
 				<input type="button" id="CategoryB" value="B" onclick="catresponse(\'B\')">\
 			</div>';
-	rewriteBody( htmlpage );
+	$('body').html( htmlpage );
 	
 	catresponse = function (buttonid){
 		if ( buttonid=="A" ) selectedcard = 0;
