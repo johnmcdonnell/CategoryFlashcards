@@ -1,11 +1,5 @@
-- Make the thing loop back around.
-- Make the buttons bigger in the instruction phase.
-- Put both versions online.
-- Make the stims shuffle each time.
-- Decide on ISI for test phase (currently 1000ms).
-- Decide on exactly what will happen in the passive condition.
 - Finalize instructions.
-- Collect all interesting data.
+- Make it collect all interesting data.
 - We're not counterbalancing the status of the extra item!
 - Talk to server
 - Have something nice happen if server not found.
