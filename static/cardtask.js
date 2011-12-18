@@ -19,6 +19,7 @@ function assert(exp, message) {
 	}
 }
 
+
 // Preload images
 function imagepreload(src) 
 {
@@ -70,7 +71,7 @@ function changeorder( arr, ordernum ) {
 // TODO: make sure this works okay.
 function shuffle( arr, exceptions ) {
 	var i;
-	exceptions = exceptions ? exceptions : [];
+	exceptions = exceptions || [];
 	shufflelocations = new Array();
 	for (i=0; i<arr.length; i++) {
 		if (exceptions.indexOf(i)==-1) { shufflelocations.push(i); }
@@ -233,6 +234,10 @@ getstim = function(theorystim) {
 	}
 	return ret;
 };
+
+// Mutable global variables
+var responsedata = [];
+var currentblock = 0;
 
 
 /********************
@@ -485,6 +490,13 @@ var TestPhase = function() {
 		return false;
 	};
 	
+	var addata = function() {
+		traindata = trainobject.resps;
+		ret = $.extend(traindata, testobject.resps );
+		ret.block = currentblock;
+		responsedata.append( ret );
+	};
+	
 	var givequestionnaire = function() {
 		$('body').html('<h1>Task Complete</h1>\
 			<p>Congratulations, you had two perfect two perfect test phases in\
@@ -498,6 +510,15 @@ var TestPhase = function() {
 	};
 	
 	var finishblock = function() {
+		currentblock++;
+		adddata();
+		if ( boolpercent(that.ret.hits)==100 ) {
+			if ( lastperfect ) done = true;
+			lastperfect = true;
+		}
+		else lastperfect=false;
+		if (done) givequestionnaire();
+		else finishblock();
 		$('body').html('<h1>Test phase Complete</h1>\
 			<p>Training phase complete! You got ' + boolpercent(that.ret.hits) + '% correct.</p>' +
 			((boolpercent(that.ret.hits)==100) ? '\r<p>Just one more round like that and you\'ll be done!' : "") +
@@ -512,13 +533,7 @@ var TestPhase = function() {
 	var nextcard = function () {
 		var done = false;
 		if (! testcardsleft.length) {
-			if ( boolpercent(that.ret.hits)==100 ) {
-				if ( lastperfect ) done = true;
-				lastperfect = true;
-			}
-			else lastperfect=false;
-			if (done) givequestionnaire();
-			else finishblock();
+			finishblock();
 		}
 		else {
 			prescard = testcardsleft.pop();

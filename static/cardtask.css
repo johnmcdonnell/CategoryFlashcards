@@ -10,7 +10,7 @@ body {
 }
 
 #holder {
-    border-color: 2px solid white;
+    /* border: 2px solid white; */
 }
 
 #cardcanvas {
