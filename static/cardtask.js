@@ -6,6 +6,26 @@
 
 // Helper functions
 
+// Assert functions stolen from 
+// http://aymanh.com/9-javascript-tips-you-may-not-know#assertion
+function AssertException(message) { this.message = message; }
+AssertException.prototype.toString = function () {
+	return 'AssertException: ' + this.message;
+};
+
+function assert(exp, message) {
+	if (!exp) {
+	  throw new AssertException(message);
+	}
+}
+
+// Preload images
+function imagepreload(src) 
+{
+	heavyImage = new Image(); 
+	heavyImage.src = src;
+}
+
 /** 
  * SUBSTITUTE PLACEHOLDERS WITH string values 
  * @param {String} str The string containing the placeholders 
@@ -15,13 +35,13 @@
  */ 
 function substitute(str, arr) 
 { 
-  var i, pattern, re, n = arr.length; 
-  for (i = 0; i < n; i++) { 
-    pattern = "\\{" + i + "\\}"; 
-    re = new RegExp(pattern, "g"); 
-    str = str.replace(re, arr[i]); 
-  } 
-  return str; 
+	var i, pattern, re, n = arr.length; 
+	for (i = 0; i < n; i++) { 
+		pattern = "\\{" + i + "\\}"; 
+		re = new RegExp(pattern, "g"); 
+		str = str.replace(re, arr[i]); 
+	} 
+	return str; 
 } 
 
 function randrange ( lower, upperbound ) {
@@ -34,17 +54,10 @@ function randrange ( lower, upperbound ) {
 // TODO: make sure this works okay.
 function shuffle( arr, exceptions ) {
 	var i;
-	if ( exceptions && exceptions.length ) {
-		shufflelocations = new Array();
-		for (i=0; i<arr.length; i++) {
-			if (exceptions.indexOf(i)==-1) { shufflelocations.push(i); }
-		}
-	}
-	else { 
-		shufflelocations = new Array();
-		for (i=0; i<arr.length; i++) {
-			shufflelocations.push(i);
-		}
+	exceptions = exceptions ? exceptions : [];
+	shufflelocations = new Array();
+	for (i=0; i<arr.length; i++) {
+		if (exceptions.indexOf(i)==-1) { shufflelocations.push(i); }
 	}
 	for (i=shufflelocations.length-1; i>=0; --i) {
 		var loci = shufflelocations[i];
@@ -54,7 +67,27 @@ function shuffle( arr, exceptions ) {
 		arr[loci] = tempj;
 		arr[locj] = tempi;
 	}
-	return shufflelocations;
+	return arr;
+}
+
+// This function swaps two array members at random, provided they are not in
+// the exceptions list.
+function swap( arr, exceptions ) {
+	var i;
+	exceptions = exceptions ? exceptions : [];
+	shufflelocations = new Array();
+	for (i=0; i<arr.length; i++) {
+		if (exceptions.indexOf(i)==-1) { shufflelocations.push(i); }
+	}
+	var loc1 = shufflelocations.splice(
+			randrange(0, shufflelocations.length), 1);
+	var loc2 = shufflelocations.splice(
+			randrange(0, shufflelocations.length), 1);
+	var temp1 = arr[loc1];
+	var temp2 = arr[loc2];
+	arr[loc1] = temp2;
+	arr[loc2] = temp1;
+	return arr;
 }
 
 
@@ -110,6 +143,10 @@ var cardnames = [
 	"images/STIM14.GIF",
 	"images/STIM15.GIF"];
 
+for (imagefile in cardnames){
+	imagepreload( imagefile );
+}
+
 var categorynames= [ "A", "B" ];
 
 var cardh = 180, cardw = 140, upper = 0, left = 0,
@@ -139,8 +176,8 @@ catfuns = [
 	},
 	function (num) {
 		// Shepard type III
-		if (num & 1) { return ((num%8)==1) ? 0 : 1; }
-		else { return (num % 8)==2 ? 1 : 0; }
+		if (num & 1) { return ((num%8)===1) ? 0 : 1; }
+		else { return (num % 8)===2 ? 1 : 0; }
 	},
 	function (num) {
 		// Shepard type IV
@@ -152,8 +189,8 @@ catfuns = [
 	},
 	function (num) {
 		// Shepard type V
-		if (num & 1) { return (num%8 == 7) ? 1 : 0; }
-		else { return (num%8 == 6) ? 0 : 1; }
+		if (num & 1) { return (num%8 === 7) ? 1 : 0; }
+		else { return (num%8 === 6) ? 0 : 1; }
 	},
 	function (num) {
 		// Shepard type VI
@@ -283,7 +320,7 @@ var TrainingPhase = function() {
 	
 	this.cardclick = function (cardid) {
 		return function() {
-			if (condition.traintype==1) {
+			if (condition.traintype===1) {
 				if ( that.next != cardid ) { return false; }
 			}
 			if ( ! timerects.length ) { return false; }
@@ -316,7 +353,7 @@ var TrainingPhase = function() {
 						return true;
 					}
 					var callback = function () {
-						if (condition.traintype==1) {
+						if (condition.traintype===1) {
 							that.indicateCard( that.next );
 						}
 						else setTimeout( function(){ lock=false; }, 400); 
@@ -363,7 +400,7 @@ var TrainingPhase = function() {
 	}
 	
 	var shufflecards = function(callback, exceptions) {
-		shuffle( that.cardlocs, exceptions );
+		swap( that.cardlocs, exceptions );
 		that.animating = true;
 		for ( var i=0; i < ncards; i ++){
 			coords = loc_coords( that.cardlocs[i] );
@@ -375,7 +412,7 @@ var TrainingPhase = function() {
 		return true;
 	};
 	
-	if ( condition.traintype==1 ) { this.indicateCard(this.next); }
+	if ( condition.traintype===1 ) { this.indicateCard(this.next); }
 	
 	// Usually this would be a dictionary of public methods but 
 	// I'm exporting the whole thing, which will make everything accessible.
@@ -389,7 +426,7 @@ var TrainingPhase = function() {
 var TestPhase = function() {
 	var i,
 	    that = this, // make 'this' accessble by privileged methods
-		lock,
+	    lock,
 	    stimimage,
 	    testcardsleft = new Array();
 	this.ret = {
@@ -416,9 +453,8 @@ var TestPhase = function() {
 	
 	catresponse = function (buttonid){
 		if (lock) { return false; }
-		if ( buttonid=="A" ) selectedcard = 0;
-		else selectedcard = 1;
-		if (selectedcard == catfun(prescard)) { that.ret.hits.push(true); }
+		var selectedcard = categorynames.indexOf(buttonid); // should be "A" or "B"
+		if (selectedcard === catfun(prescard)) { that.ret.hits.push(true); }
 		else that.ret.hits.push(false);
 		lock = true;
 		$('#query').html(acknowledgment);
@@ -509,3 +545,4 @@ $(window).load( function(){
 });
 
 
+// vi: set et! ts=4 sw=4
