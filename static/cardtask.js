@@ -49,6 +49,22 @@ function randrange ( lower, upperbound ) {
 	return Math.floor( Math.random() * upperbound + lower );
 }
 
+// We want to be able to alias the order of stimuli to a single number which
+// can be stored and which can easily replicate a given stimulus order.
+function changeorder( arr, ordernum ) {
+	var thisorder = ordernum;
+	for (i=arr.length-1; i>=0; --i) {
+		var loci = shufflelocations[i];
+		var locj = shufflelocations[thisorder%(i+1)];
+		thisorder = Math.floor(thisorder/(i+1));
+		var tempi = arr[loci];
+		var tempj = arr[locj];
+		arr[loci] = tempj;
+		arr[locj] = tempi;
+	}
+	return arr;
+}
+
 // Fisher-Yates shuffle algorithm.
 // modified from http://sedition.com/perl/javascript-fy.html
 // TODO: make sure this works okay.
@@ -157,8 +173,8 @@ var cardh = 180, cardw = 140, upper = 0, left = 0,
 condition = {
 	traintype: randrange(0,2) , // 0=active, 1=passive
 	rule: randrange(0,6), // type I-VI -> 0-5.
-	whichdims: randrange(0,4), // 0-3; which dimension not to use.
-	dimorder: randrange(0,6) // 0-5; which order to order the dimensions
+	dimorder: randrange(0,24), // 0-23; which order to order the dimensions
+	dimvals: randrange(0,16)  // 0-16 whether a '0' means 0 or 1 in terms of the stim.
 };
 
 // Task functions
@@ -198,20 +214,22 @@ catfuns = [
 var catfun = catfuns[condition.rule];
 
 getstim = function(theorystim) {
-	bits = [theorystim&1 ? 1 : 0,
-			theorystim&2 ? 1 : 0,
-			theorystim&4 ? 1 : 0];
+	console.assert( theorystim < 8, "Stim >=8 ("+theorystim+")");
+	console.assert( theorystim >= 0, "Stim less than 0 ("+theorystim+")");
+	flippedstim = theorystim^condition.dimvals;
+	bits = new Array();
+	oldbits = new Array();
+	for (i=0; i<4; i++) {
+		bits.push( flippedstim&Math.pow(2,i) ? 1 : 0 );
+		oldbits.push( flippedstim&Math.pow(2,i) ? 1 : 0 );
+	}
+	
+	changeorder(bits, condition.dimorder);
+	
 	var multiples = [1, 2, 4, 8];
-	multiples.splice(condition.whichdims, 1);
-	
-	newmultiples = [];
-	newmultiples.push( multiples.splice(Math.floor( condition.dimorder/2 ), 1) );
-	newmultiples.push( multiples.splice(condition.dimorder%2, 1));
-	newmultiples.push( multiples[0] );
-	
 	var ret = 0;
-	for (var i=0; i<=2; i++) {
-		ret += newmultiples[i] * bits[i];
+	for (var i=0; i<=3; i++) {
+		ret += multiples[i] * bits[i];
 	}
 	return ret;
 };
