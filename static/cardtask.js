@@ -376,7 +376,7 @@ var TrainingPhase = function() {
 					shufflecards( callback, that.lastcards );
 					return true;
 				},
-				1000);
+				1500);
 			return true;
 		};
 	};
