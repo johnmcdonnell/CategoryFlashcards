@@ -143,9 +143,6 @@ var cardnames = [
 	"images/STIM14.GIF",
 	"images/STIM15.GIF"];
 
-for (imagefile in cardnames){
-	imagepreload( imagefile );
-}
 
 var categorynames= [ "A", "B" ];
 
